@@ -1,6 +1,6 @@
 /*  ==========================================================  */
-/*                     Autor: Pawel Muller                      */
-/*            Temat: generator kodow kreskowych EAN8            */
+/*                    Author: Pawel Muller                      */
+/*                 EAN8 Barcode Generator (x86)                 */
 /*  ==========================================================  */
 
 #include <stdio.h>
