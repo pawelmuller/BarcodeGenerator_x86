@@ -4,7 +4,7 @@ global encodeBarcode, writeBarcodeRow
 ; ====================== encodeBarcode ======================= ;
 
 encodeBarcode:
-; PROLOG
+; PROLOGUE
 	push EBP
 	mov EBP, ESP
 
@@ -16,28 +16,28 @@ encodeBarcode:
 	mov ESI, DWORD[EBP+12]
 	mov EDI, DWORD[EBP+16]
 
-; Wlasciwa procedura:
-;   EBX - ean_code_in (8 cyfr)
-;   ESI - ean_code_encoded (wyjsciowy ciag zer i jedynek reprezentujacy paski kodu kreskowego)
-;   EDI - coding (string kodowania)
-;   DL - rodzaj kodowania - flaga
+; Procedure:
+;   EBX - ean_code_in (8 digit C string)
+;   ESI - ean_code_encoded (the output string of 1 and 0 representing barcode bars)
+;   EDI - coding
+;   DL - encoding type - flag
 
     add ESI, 2
 
-    mov DL, 0 ; Flaga - kodownie "lewe"
+    mov DL, 0 ; Flag - "left" coding
     call encode
     call encode
     call encode
     call encode
 
     add ESI, 5
-    mov DL, 1 ; Flaga - kodownie "prawe"
+    mov DL, 1 ; Flag - "roght" coding
     call encode
     call encode
     call encode
     call encode
 
-; EPILOG
+; EPILOGUE
     pop EDI
     pop ESI
     pop EBX
@@ -45,30 +45,30 @@ encodeBarcode:
 	ret
 
 encode:
-;   CL - pojedynczy znak kodu jawnego
-;   EAX - adres uzywanego znaku w stringu kodujacym
-;   CH - uzywany znak z stringa kodujacego
+;   CL - single code character
+;   EAX - address of the character used in the coding string
+;   CH - used character from the coding string
 
-    mov EAX, 0 ; Zerowanie rejestru EAX do obliczen
-    mov CL, BYTE[EBX] ; Wczytanie znaku (EBX - ean_code_in)
+    mov EAX, 0 ; Resetting the EAX registry for calculation
+    mov CL, BYTE[EBX] ; Loading a character
     sub CL, '0'
-    shl CL, 3 ; Mnozenie przez 8, by uzyskac indeks w stringu kodujacym 
+    shl CL, 3 ; Multiplication by 8 to get the index in the coding string 
     mov AL, CL
-    add EAX, EDI ; Obliczenie adresu pierwszego znaku w stringu kodujacym
-    mov CH, BYTE[EAX] ; Odczyt pierwszego znaku
+    add EAX, EDI ; Calculation of the address of the first character in the coding string
+    mov CH, BYTE[EAX] ; Reading the first character
 
 encodeLoop:
-    inc ESI ; Przejscie do nastepnego znaku w stringu zakodowanym (ESI - ean_code_encoded)
-    xor CH, DL ; Uwzglednienie flagi - kodowanie lewe (0) lub prawe (1)
-    mov BYTE[ESI], CH ; Zapis
+    inc ESI ; Move to the next character in coded string
+    xor CH, DL ; Flag inclusion - left (0) or right (1) coding
+    mov BYTE[ESI], CH ; Saving
 
-    inc EAX ; Przejscie do nastepnego znaku w stringu kodujacym
-    mov CH, BYTE[EAX] ; Odczyt znaku
+    inc EAX ; Move to the next character in coding string
+    mov CH, BYTE[EAX] ; Character reading
     cmp CH, 'X'
     jne encodeLoop
 
 encodeExit:
-    inc EBX ; Przejscie do nastepnego znaku
+    inc EBX ; Move to the next character
     ret
 
 
@@ -76,7 +76,7 @@ encodeExit:
 ; ===================== writeBarcodeRow ====================== ;
 
 writeBarcodeRow:
-; PROLOG
+; PROLOGUE
     push EBP
     mov EBP, ESP
 
@@ -87,44 +87,44 @@ writeBarcodeRow:
 	mov ESI, DWORD[EBP+12]
 
 
-; Wlasciwa procedura:
+; Procedure:
 ;   EDI - encoded_barcode
 ;   ESI - image_with_frame
 
-    mov AH, 1 ; Inicjalizacja koloru poczatkowego (bialy)
-    mov AL, 0 ; Inicjalizacja bufora na pojedyncze bajty obrazka
-    mov CL, 8 ; Inicjalizacja licznika bitow
+    mov AH, 1 ; Initialization of the color (white)
+    mov AL, 0 ; Initialization of the buffer for single bytes of the image
+    mov CL, 8 ; Bit counter initialization
 
-    mov CH, BYTE[EDI] ; Odczytanie ilosci pikseli koloru
+    mov CH, BYTE[EDI] ; Reading the number of color pixels
     cmp CH, 0
     je changeColor
 
 writeByte:
     shl AL, 1
-    add AL, AH ; Ustawienie ostatniego bitu na zadany kolor
+    add AL, AH ; Setting the last bit to a given color
 
-    dec CL ; Dekrementacja licznika bitow
+    dec CL ; Bit counter decrement
     jnz writeByteContinuation
 
 saveImageByte:
     mov BYTE[ESI], AL
     inc ESI
-    mov AL, 0 ; Czyszczenie bufora na pojedyncze bajty obrazka
-    mov CL, 8 ; Ustawienie licznika bitow
+    mov AL, 0 ; Clearing the buffer for individual bytes of the image
+    mov CL, 8 ; Bit counter setting
 
 writeByteContinuation:
     dec CH
     jnz writeByte
 
 changeColor:
-    xor AH, 0b1 ; Negacja ostatniego bitu
-    inc EDI ; Przejscie do nastepnego koloru
+    xor AH, 0b1 ; Last bit negation
+    inc EDI ; Go to the opposite color
     mov CH, BYTE[EDI]
     cmp CH, 0
     jnz writeByte
 
 writeBarcodeRow_exit:
-; Poprawienie i zapis ostatniego, nieprzetwarzanego bajtu:
+; Correction and saving of the last, unprocessed byte:
     shl AL, 1
     add AL, 1
     dec CL
@@ -132,7 +132,7 @@ writeBarcodeRow_exit:
 
     mov BYTE[ESI], AL
 
-; EPILOG
+; EPILOGUE
     pop ESI
     pop EDI
 	pop EBP
